@@ -15,7 +15,6 @@ Aluminium
 Gaydon
 Mercedes-Benz_M176/M177/M178_engine
 Aston_Martin_V12_engine
-Aston_Martin_DB11
 Elinor_Fettiplace
 270_Park_Avenue_(1960–2021)
 Bejeweled_(video_game)
@@ -86,7 +85,6 @@ Eugénie_Hamer
 Howard_Baker
 Yuriko,_Princess_Mikasa
 November_14
-November_15
 November_16
 List_of_days_of_the_year
 Pied-billed_grebe
@@ -95,4 +93,3 @@ Sexual_dimorphism
 Cundinamarca_Department
 Bogotá
 Wikimedia_Foundation
-English_language

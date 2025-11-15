@@ -25,5 +25,6 @@ used_titles <- all_titles
 for(special in c("^Main_Page", "^File:", "^Help:", "^Portal:", "^Special:", "^Talk:", "^Template_talk:", "^Template:", "^User:", "^Wikipedia:")) {
   used_titles <- grep(special, used_titles, invert = TRUE, value = TRUE)
 }
-# Save the titles
-writeLines(used_titles, "wikipedia_titles.txt")
+# Save the unique titles
+unique_titles <- unique(used_titles)
+writeLines(unique_titles, "wikipedia_titles.txt")

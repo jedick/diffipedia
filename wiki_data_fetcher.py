@@ -164,7 +164,12 @@ def get_wikipedia_introduction(title: str, revid: int) -> Dict[str, str]:
 
     json_data = run_get_request(params)
 
-    html_content = json_data["parse"]["text"]["*"]
+    # Sometimes a revision is deleted and can't be viewed
+    # E.g. title = 'Turin', revid = '1276494621'
+    try:
+        html_content = json_data["parse"]["text"]["*"]
+    except:
+        return None
 
     # Extract introduction (text before first section heading)
     # Remove everything from the first <h2> tag onwards
