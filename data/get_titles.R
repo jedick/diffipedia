@@ -22,7 +22,7 @@ all_titles <- sapply(lines, process_line)
 all_titles <- as.character(unlist(all_titles))
 # Remove special pages
 used_titles <- all_titles
-for(special in c("^Main_Page", "^File:", "^Help:", "^Portal:", "^Special:", "^Talk:", "^Template:", "^User:", "^Wikipedia:")) {
+for(special in c("^Main_Page", "^File:", "^Help:", "^Portal:", "^Special:", "^Talk:", "^Template_talk:", "^Template:", "^User:", "^Wikipedia:")) {
   used_titles <- grep(special, used_titles, invert = TRUE, value = TRUE)
 }
 # Save the titles

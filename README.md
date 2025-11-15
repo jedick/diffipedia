@@ -4,7 +4,7 @@ This is an AI alignment project.
 
 The data are old and new versions of Wikipedia articles.
 Two prompts for GenAI models are used to classify differences between the versions as noteworthy or not.
-Where the classification pairs (one from each prompt) disagree with one another, human and AI judges independently make a decision.
+Where the classifications generated with each prompt disagree with one another, human and AI judges are invoked to make independent decisions.
 Looking at where the human and AI judges disagree is how we gather examples and failure modes to improve the AI judge.
 
 ## Interactive usage
