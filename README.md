@@ -13,15 +13,16 @@ This is an AI alignment project.
 
 ## Interactive usage
 
-The first example retrieves old and new revisions of an introduction from a Wikipedia article.
+Retrieve old and new revisions of an introduction from a Wikipedia article.
 
 ```python
 from wiki_data_fetcher import *
 
-# You can get a revision of a given age
+# Option 1: Get a revision from n days ago
 title = "Albert Einstein"
 new_info = get_revision_from_age(title, age_days = 0)
-# Or get a given revision before the current one
+old_info = get_revision_from_age(title, age_days = 10)
+# Option 2: Get the nth revision before current
 json_data = get_previous_revisions(title, revisions = 100)
 old_info = extract_revision_info(json_data, 100)
 
@@ -32,11 +33,11 @@ new_revision = get_wikipedia_introduction(title, new_info["revid"])
 old_revision = get_wikipedia_introduction(title, old_info["revid"])
 ```
 
-The second example runs a model to classify the differences between the revisions.
+Classify the differences between the revisions as noteworthy or not, and provide a rationale.
 
 ```python
-from create_examples import *
-analyze(old_revision, new_revision, "heuristic")
+from models import *
+classify(old_revision, new_revision, "heuristic")
 ```
 
 ```
@@ -66,18 +67,11 @@ For this reason, the prompts for the classifiers (heuristic and few-shot) are wr
     - The text consists of three rationales (from the few-shot and heuristic prompts and the human judge) and the classification from the human judge
     - The competing rationales provide context that may help with reasoning and generalization
 6. Evaluate
-    - Run aligned AI judge and measure performance change from unaligned AI judge
+    - Measure performance change (accuracy with human judge as ground truth) between unaligned and aligned AI judges
 7. Test
-    - Repeat steps 1-4 and 6 to evaluate the performance change on unseen data
+    - Repeat steps 1-4 and 6 to measure the performance change on unseen data
 8. Iterate
     - Repeat alignment (step 5) until acceptable performance on test data is reached
-
-Estimated MVE (minimum viable eval set):
-- Introductions of 50 articles linked from Wikipedia home page
-- 3 revisions for each article (100 behind, 10 behind, and current)
-- 200 examples: 50 articles x 2 time spans (100-current and 10-current) x 2 classifiers (heuristic and few-shot)
-- Expect ca. 20 examples where classifiers disagree
-- Of these, expect ca. 10 examples where AI and human judges disagree
 
 ## AI alignment: instructions
  
@@ -103,10 +97,10 @@ The results are saved to `data/AI_judgments.csv`.
 5. **Alignment:** Run `data/align_judge.R` to collect the alignment data
 (rationales and classification from human judge, and rationales from heuristic and few-shot prompts) into `data/alignment_text.txt`
 
-6. **Evaluate:** Run `judge_disagreements.py --aligned` to run the aligned judge on the same examples where the classifies disagree,
-then run `data/summarize_results.R` to generate the summary statistics (results listed below).
+6. **Evaluate:** Run `judge_disagreements.py --aligned` to run the aligned judge on the same examples where the classifiers disagree,
+then run `data/summarize_results.R` to compute the summary statistics (results listed below).
 
-# Results
+## Results
 
 - Wikipedia pages processed: 95
 - Available 10th previous revision: 94; 100th previous revision: 81
