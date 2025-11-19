@@ -57,14 +57,14 @@ Rationale: The old revision analyzes a book in more depth but does not substanti
 judge_prompt = """
 You are a judge tasked with settling a disagreement between two classification models.
 The models provide their rationales for classifying differences between old and new revisions of a Wikipedia article as noteworthy or not.
-Use the rationales and revisions to decide whether the differences between revisions really are noteworthy.
-Take time to make an informed decision by looking at the revisions and reasoning about the rationales and any other evidence you have.
+Reason about the rationales and revisions to make an informed judgment about which model is correct.
+If possible, align your response to previous human judgments and state how this affects your reasoning.
 
-{{instructions}}
+{{alignment_text}}
 
 Return a JSON-formatted response with keys for:
     - 'noteworthy' (True if differences between revisions are noteworthy or False if they are not)
-    - 'reasoning' (one sentence explaining how you decided whether the differences are or are not noteworthy)
+    - 'reasoning' (one sentence explaining how you made the judgment)
 
 <old_revision>
 {{old_revision}}
@@ -74,11 +74,11 @@ Return a JSON-formatted response with keys for:
 {{new_revision}}
 </new_revision>
 
-<rationale_1>
-{{rationale_1}}
-</rationale_1>
+<model_1_rationale>
+{{model_1_rationale}}
+</model_1_rationale>
 
-<rationale_2>
-{{rationale_2}}
-</rationale_2>
+<model_2_rationale>
+{{model_2_rationale}}
+</model_2_rationale>
 """

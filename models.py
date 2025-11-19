@@ -66,19 +66,19 @@ def classify(old_revision, new_revision, prompt_style):
 
 
 @retry_with_backoff()
-def judge(old_revision, new_revision, rationale_1, rationale_2):
+def judge(old_revision, new_revision, rationale_1, rationale_2, aligned=False):
     """
-    AI judge to settle disagreements between classifications with different prompts
+    AI judge to settle disagreements between classification models
 
     Args:
         old_revision: Old revision of article
         new_revision: New revision of article
-        rationale_1: Rationale provided by model with prompt 1
-        rationale_2: Rationale provided by model with prompt 2
+        rationale_1: Rationale provided by model 1 (i.e., heuristic prompt)
+        rationale_2: Rationale provided by model 2 (i.e., few-shot prompt)
 
     Returns:
         noteworthy: True if the differences are noteworthy; False if not
-        reasoning: One-sentence reason for the decision
+        reasoning: One-sentence reason for the judgment
     """
 
     prompt = judge_prompt
@@ -87,9 +87,19 @@ def judge(old_revision, new_revision, rationale_1, rationale_2):
         "{{new_revision}}", new_revision
     )
     # Add rationales to prompt
-    prompt = prompt.replace("{{rationale_1}}", rationale_1).replace(
-        "{{rationale_2}}", rationale_2
+    prompt = prompt.replace("{{model_1_rationale}}", rationale_1).replace(
+        "{{model_2_rationale}}", rationale_2
     )
+
+    # Add alignment examples to prompt
+    if aligned:
+        with open("data/alignment_text.txt", "r") as file:
+            lines = file.readlines()
+            alignment_text = "".join(lines)
+    else:
+        alignment_text = ""
+
+    prompt = prompt.replace("{{alignment_text}}", alignment_text)
 
     # Define response schema
     class Response(BaseModel):

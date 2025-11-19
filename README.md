@@ -2,14 +2,18 @@
 
 This is an AI alignment project.
 
-The data are old and new versions of Wikipedia articles.
-Two prompts for GenAI models are used to classify differences between the versions as noteworthy or not.
-Where the classifications generated with each prompt disagree with one another, human and AI judges are invoked to make independent decisions.
-Looking at where the human and AI judges disagree is how we gather examples and failure modes to improve the AI judge.
+- The data are old and new revisions of Wikipedia articles
+- Two prompts (heuristic and few-shot) are used to classify differences between the revisions as noteworthy or not
+- Examples where the prompts agree are removed from the alignment pipeline
+  - This allows the human judge to focus on the hardest examples
+- Examples where the prompts disagree are pipelined for human and AI judges
+- The AI judge is run in two modes: unaligned (minimal instructions) and aligned
+  - The alignment instructions are based on the human judge's rationales.
+- The performance between the unaligned and aligned AI judges is measured on unseen data to test the alignment.
 
 ## Interactive usage
 
-The first example retrieves old and new versions of an introduction from a Wikipedia article.
+The first example retrieves old and new revisions of an introduction from a Wikipedia article.
 
 ```python
 from wiki_data_fetcher import *
@@ -24,57 +28,59 @@ old_info = extract_revision_info(json_data, 100)
 # new_info and old_info are dictionaries:
 # {'revid': 1143737878, 'timestamp': '2023-03-09T15:49:20Z'}
 # Now get the introduction (the text before the first <h2> heading) for each revision
-new_version = get_wikipedia_introduction(title, new_info["revid"])
-old_version = get_wikipedia_introduction(title, old_info["revid"])
+new_revision = get_wikipedia_introduction(title, new_info["revid"])
+old_revision = get_wikipedia_introduction(title, old_info["revid"])
 ```
 
-The second example runs a model to classify the differences between the versions.
+The second example runs a model to classify the differences between the revisions.
 
 ```python
 from create_examples import *
-analyze(old_version, new_version, "heuristic")
+analyze(old_revision, new_revision, "heuristic")
 ```
 
 ```
 {'noteworthy': True,
- 'rationale': 'The differences are noteworthy because the new version adds the specific outcome of Einstein\'s recommendation (the Manhattan Project), clarifies his famous objection to quantum theory with a direct quote ("God does not play dice"), and provides the full rationale for his Nobel Prize, all of which add significant details about major events and his views.'}
+ 'rationale': 'The differences are noteworthy because the new revision adds the specific outcome of Einstein\'s recommendation (the Manhattan Project), clarifies his famous objection to quantum theory with a direct quote ("God does not play dice"), and provides the full rationale for his Nobel Prize, all of which add significant details about major events and his views.'}
 ```
 
 ## AI alignment: overview
 
-There are three AI agents: two classifiers and a judge.
+There are two classifier models with different prompts: heuristic and few-shot.
 The judge only comes in when the classifiers disagree.
-The purpose of alignment is to improve the AI judge's performance relative to a human judge.
-For this reason, the prompts for the classifiers (heuristic and few-shot) will be written once and locked in for the duration of the alignment.
+The purpose of alignment is to get the AI judge to make more human-like decisions on hard examples.
+For this reason, the prompts for the classifiers (heuristic and few-shot) are written once and locked in for the duration of the alignment.
 
 1. Collect data
-    - Introductions from Wikipedia articles: old and new versions
+    - Introductions from Wikipedia articles: old and new revisions
 2. Create examples
     - Classify differences using two prompt styles: heuristic and few-shot
 3. Human judge
     - Judge examples where heuristic and few-shot classifiers disagree
     - No AI context: Judge is blind to classifiers' output
-4. AI judge
+4. AI judge (pre-alignment)
     - Judge examples where heuristic and few-shot disagree
     - AI context: Judge can see classifiers' output
-5. Error analysis
-    - Describe failure modes for examples where human and AI judge disagree
-6. Alignment
-    - Use error analysis to refine prompt for AI judge
-7. Evaluate
-    - Re-run AI judge and measure performance change
+5. Alignment
+    - Add alignment text to prompt for AI judge
+    - The text consists of three rationales (from the few-shot and heuristic prompts and the human judge) and the classification from the human judge
+    - The competing rationales provide context that may help with reasoning and generalization
+6. Evaluate
+    - Run aligned AI judge and measure performance change from unaligned AI judge
+7. Test
+    - Repeat steps 1-4 and 6 to evaluate the performance change on unseen data
 8. Iterate
-    - Perform alignment until acceptable performance is reached
+    - Repeat alignment (step 5) until acceptable performance on test data is reached
 
 Estimated MVE (minimum viable eval set):
 - Introductions of 50 articles linked from Wikipedia home page
-- 3 versions for each article (100 revisions behind, 10 revisions behind, and current)
+- 3 revisions for each article (100 behind, 10 behind, and current)
 - 200 examples: 50 articles x 2 time spans (100-current and 10-current) x 2 classifiers (heuristic and few-shot)
 - Expect ca. 20 examples where classifiers disagree
 - Of these, expect ca. 10 examples where AI and human judges disagree
 
 ## AI alignment: instructions
-
+ 
 **Initial preparation:** Run `data/get_titles.R` to extract and save the page titles linked from the Wikipedia Main Page to `data/wikipedia_titles.txt`.
 *This is optional; do this to use a newer set of page titles than the ones provided here.*
   
@@ -87,19 +93,27 @@ two prompt styles (heuristic and few-shot) and two revision intervals (from 10th
 
 3. **Human judge:** Run `data/extract_disagreements.R` to extract the examples where the heuristic and few-shot classifiers disagree.
 These are saved in `data/disagreements_for_human.csv` (only Wikipedia introductions) and `data/disagreements_for_AI.csv` (introductions and classifier responses).
-*Without looking at the classifier responses*, the human judge fills in the `noteworthy` (True/False) and `rationale` columns in the for-human CSV file and saves it as `data/human_judgments.csv`.
+*Without looking at the classifier responses*,
+the human judge fills in the `noteworthy` (True/False) and `rationale` columns in the for-human CSV file and saves it as `data/human_judgments.csv`.
 
-4. **AI judge:** Run `judge_disagreements.py` to run the judge on the examples where the classifiers disagree.
+4. **AI judge:** Run `judge_disagreements.py` to run the unaligned judge on the examples where the classifiers disagree.
 The AI judge only sees the old and new revisions and the rationales from the heuristic and few-shot classifiers (not the human judge's responses).
 The results are saved to `data/AI_judgments.csv`.
+
+5. **Alignment:** Run `data/align_judge.R` to collect the alignment data
+(rationales and classification from human judge, and rationales from heuristic and few-shot prompts) into `data/alignment_text.txt`
+
+6. **Evaluate:** Run `judge_disagreements.py --aligned` to run the aligned judge on the same examples where the classifies disagree,
+then run `data/summarize_results.R` to generate the summary statistics (results listed below).
 
 # Results
 
 - Wikipedia pages processed: 95
-- Pages with available 10th previous revision: 94; 100th previous revision: 81
+- Available 10th previous revision: 94; 100th previous revision: 81
 - Revisions classified as noteworthy with heuristic prompt: 29%; few-shot prompt: 35%
-- Pages with disagreements between classifications from heuristic and few-shot prompts: 17
-- Disagreed classifications labeled as noteworthy with heuristic prompt: 3; few-shot prompt: 14
-- Disagreed classifications labeled as noteworthy by human judge: 11
-- Labels coinciding with human judge for heuristic prompt: 5; few-shot prompt: 12
+- Disagreements between heuristic and few-shot prompts: 17
+  - Classified as noteworthy with heuristic prompt: 3; few-shot prompt: 14
+  - Classified as noteworthy by human judge: 11
+  - Classified as noteworthy by **unaligned** AI judge: 17 (65% accurate)
+  - Classified as noteworthy by **aligned** AI judge: 12 (94% accurate)
 

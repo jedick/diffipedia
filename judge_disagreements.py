@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 from models import judge
 
@@ -14,6 +15,19 @@ if __name__ == "__main__":
     df["noteworthy"] = None
     df["reasoning"] = None
 
+    # We run the unaligned judge unless the script is called with --aligned
+    aligned = False
+    outfile = "data/AI_judgments.csv"
+    # Check if an argument was passed
+    if len(sys.argv) > 1:
+        # sys.argv[0] is the script name, sys.argv[1] is the first argument
+        argument = sys.argv[1]
+        if argument == "--aligned":
+            aligned = True
+            outfile = "data/AI_judgments_aligned.csv"
+
+    print(f"Saving judgments to {outfile}")
+
     for index, row in df.iterrows():
         # Change this if needed (to restart after errors)
         if index < 0:
@@ -28,6 +42,7 @@ if __name__ == "__main__":
                     df.iloc[index]["new_revision"],
                     df.iloc[index]["heuristic_rationale"],
                     df.iloc[index]["few-shot_rationale"],
+                    aligned=aligned,
                 )
             except:
                 output = {"noteworthy": None, "reasoning": None}
@@ -36,4 +51,4 @@ if __name__ == "__main__":
             df.at[index, "noteworthy"] = output["noteworthy"]
             df.at[index, "reasoning"] = output["reasoning"]
             # Write CSV in every loop to avoid data loss if errors occur
-            df.to_csv("data/AI_judgments.csv", index=False, encoding="utf-8")
+            df.to_csv(outfile, index=False, encoding="utf-8")
