@@ -16,15 +16,20 @@ if __name__ == "__main__":
     df["reasoning"] = None
 
     # We run the unaligned judge unless the script is called with --aligned
-    aligned = False
+    mode = "unaligned"
     outfile = "data/AI_judgments.csv"
     # Check if an argument was passed
     if len(sys.argv) > 1:
         # sys.argv[0] is the script name, sys.argv[1] is the first argument
         argument = sys.argv[1]
         if argument == "--aligned":
-            aligned = True
+            mode = "aligned"
             outfile = "data/AI_judgments_aligned.csv"
+        elif argument == "--aligned-heuristic":
+            mode = "aligned-heuristic"
+            outfile = "data/AI_judgments_aligned_heuristic.csv"
+        else:
+            raise ValueError(f"Unknown argument: {argument}")
 
     print(f"Saving judgments to {outfile}")
 
@@ -42,7 +47,7 @@ if __name__ == "__main__":
                     df.iloc[index]["new_revision"],
                     df.iloc[index]["heuristic_rationale"],
                     df.iloc[index]["few-shot_rationale"],
-                    aligned=aligned,
+                    mode=mode,
                 )
             except:
                 output = {"noteworthy": None, "reasoning": None}

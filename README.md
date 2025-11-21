@@ -83,7 +83,8 @@ the human aligner fills in the `noteworthy` (True/False) and `rationale` columns
 The results are saved to `data/AI_judgments.csv`.
 
 6. **Alignment:** Run `data/align_judge.R` to collect the alignment data into `data/alignment_text.txt`.
-The alignment data consist of True/False labels and rationales from the human aligner and rationales from the heuristic and few-shot prompts.
+The alignment text consist of True/False labels and rationales from the human aligner and rationales from the classifiers.
+A heuristic summary of the alignment text (made using a different LLM) is in `data/alignment_text_heuristic.txt`.
 
 7. **Evaluate:** Run `judge_disagreements.py --aligned` to run the aligned judge on the examples where the classifiers disagree;
 the results are saved to `data/AI_judgments_aligned.csv`.
@@ -95,17 +96,25 @@ Then run `data/summarize_results.R` to compute the summary statistics (results l
 - Available 10th previous revision: 162/88; 100th previous revision: 141/79
 - Revisions classified as noteworthy with heuristic prompt: 30%/32%; few-shot prompt: 36%/37%
 
-- Train set
+### Train set
+
 - Disagreements between heuristic and few-shot prompts: 26
   - Classified as noteworthy with heuristic prompt: 3; few-shot prompt: 23
   - Classified as noteworthy by human aligner: 16
   - Classified as noteworthy by **unaligned** AI judge: 25 (58% accurate)
   - Classified as noteworthy by **aligned** AI judge: 18 (92% accurate)
+  - Classified as noteworthy by **aligned** AI judge (heuristic prompt): 23 (65% accurate)
 
-- Test set
+### Test set
+
 - Disagreements between heuristic and few-shot prompts: 19
   - Classified as noteworthy with heuristic prompt: 5; few-shot prompt: 14
   - Classified as noteworthy by human aligner: 8
   - Classified as noteworthy by **unaligned** AI judge: 18 (37% accurate)
   - Classified as noteworthy by **aligned** AI judge: 16 (47% accurate)
+  - Classified as noteworthy by **aligned** AI judge (heuristic prompt): 15 (53% accurate)
+
+> [!IMPORTANT]
+> The proportion of revisions classified as noteworthy by the human annotator varied from
+> 62% in the train set to 42% in the test set.
 

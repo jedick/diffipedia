@@ -65,6 +65,14 @@ aAI_correct_fraction <- round(100*aAI_correct / nrow(aAI_judge_df))
 text <- "  - Classified as noteworthy by **aligned** AI judge: "
 output <- c(output, paste0(text, aAI_noteworthy, " (", aAI_correct_fraction, "% accurate)"))
 
+# aAI: aligned AI
+aAI_judge_df <- read.csv("AI_judgments_aligned_heuristic.csv")
+aAI_noteworthy <- sum(aAI_judge_df$noteworthy == "True")
+aAI_correct <- sum(aAI_judge_df$noteworthy == human_df$noteworthy)
+aAI_correct_fraction <- round(100*aAI_correct / nrow(aAI_judge_df))
+text <- "  - Classified as noteworthy by **aligned** AI judge (heuristic prompt): "
+output <- c(output, paste0(text, aAI_noteworthy, " (", aAI_correct_fraction, "% accurate)"))
+
 
 # Print output to terminal and copy to README.md
 if(FALSE) {

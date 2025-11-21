@@ -66,7 +66,7 @@ def classify(old_revision, new_revision, prompt_style):
 
 
 @retry_with_backoff()
-def judge(old_revision, new_revision, rationale_1, rationale_2, aligned=False):
+def judge(old_revision, new_revision, rationale_1, rationale_2, mode="unaligned"):
     """
     AI judge to settle disagreements between classification models
 
@@ -91,13 +91,19 @@ def judge(old_revision, new_revision, rationale_1, rationale_2, aligned=False):
         "{{model_2_rationale}}", rationale_2
     )
 
-    # Add alignment examples to prompt
-    if aligned:
+    # Optionally add alignment text to prompt
+    if mode == "unaligned":
+        alignment_text = ""
+    elif mode == "aligned":
         with open("data/alignment_text.txt", "r") as file:
             lines = file.readlines()
             alignment_text = "".join(lines)
+    elif mode == "aligned-heuristic":
+        with open("data/alignment_text_heuristic.txt", "r") as file:
+            lines = file.readlines()
+            alignment_text = "".join(lines)
     else:
-        alignment_text = ""
+        raise ValueError(f"Unknown mode: {mode}")
 
     prompt = prompt.replace("{{alignment_text}}", alignment_text)
 
