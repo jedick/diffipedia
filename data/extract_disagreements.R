@@ -1,5 +1,5 @@
 # Process classifier responses (examples.csv)
-# to make files for human and AI judges to review
+# to make files for human aligner and AI judge to review
 # 20251116 jmd
 
 # Read the classifier responses
@@ -20,11 +20,11 @@ new_revision <- c(intro_df$intro_0[disagree_10], intro_df$intro_0[disagree_100])
 # Also get the titles
 title <- c(intro_df$title[disagree_10], intro_df$title[disagree_100])
 
-# Create df with common columns for human and AI judge
+# Create df with common columns for human aligner and AI judge
 out_common <- data.frame(title, old_revision, new_revision)
-# Add empty columns for human judge to fill in
+# Add empty columns for human aligner to fill in
 out_human <- cbind(out_common, noteworthy = "", rationale = "")
-# Save file for human judge
+# Save file for human aligner
 write.csv(out_human, "disagreements_for_human.csv", row.names = FALSE)
 
 # Add context for AI judge

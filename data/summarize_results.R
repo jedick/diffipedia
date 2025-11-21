@@ -33,9 +33,9 @@ heuristic_dis_noteworthy <- sum(disagree_df$heuristic_noteworthy == "True")
 few.shot_dis_noteworthy <- sum(disagree_df$few.shot_noteworthy == "True")
 output <- c(output, paste0(t1, heuristic_dis_noteworthy, t2, few.shot_dis_noteworthy))
 
-human_df <- read.csv("human_judgments.csv")
+human_df <- read.csv("human_alignments.csv")
 stopifnot(all(human_df$title == disagree_df$title))
-text <- "  - Classified as noteworthy by human judge:"
+text <- "  - Classified as noteworthy by human aligner:"
 output <- c(output, paste(text, sum(human_df$noteworthy == "True")))
 
 #heuristic_correct <- sum(human_df$noteworthy == disagree_df$heuristic_noteworthy)
