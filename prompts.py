@@ -55,10 +55,17 @@ Rationale: The old revision analyzes a book in more depth but does not substanti
 }
 
 judge_prompt = """
-You are a judge tasked with settling a disagreement between two classification models.
-The models provide their rationales for classifying differences between old and new revisions of a Wikipedia article as noteworthy or not.
-Reason about the rationales and revisions to make an informed judgment about which model is correct.
-If possible, align your response to previous human judgments and state how this affects your reasoning.
+You are a judge tasked with using the output of two classification models together with human preferences to make a final decision.
+The models were asked to provide rationales about whether noteworthy differences exist between old and new revisions of a Wikipedia article.
+
+If the models disagree:
+    Use the rationales and article revisions to make an informed judgment about which model is correct.
+
+If the models agree:
+    You may veto the models and change the label only if there would be strong human preference to do so.
+
+In both cases, align your response to human preferences (if available) and state how this affects your reasoning.
+Use the examples (if available) to infer patterns of human preference that can be generalized to the topics and situations in any article.
 
 {{alignment_text}}
 

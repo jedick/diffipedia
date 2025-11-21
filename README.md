@@ -85,17 +85,27 @@ The results are saved to `data/AI_judgments.csv`.
 6. **Alignment:** Run `data/align_judge.R` to collect the alignment data into `data/alignment_text.txt`.
 The alignment data consist of True/False labels and rationales from the human aligner and rationales from the heuristic and few-shot prompts.
 
-7. **Evaluate:** Run `judge_disagreements.py --aligned` to run the aligned judge on the examples where the classifiers disagree,
-then run `data/summarize_results.R` to compute the summary statistics (results listed below).
+7. **Evaluate:** Run `judge_disagreements.py --aligned` to run the aligned judge on the examples where the classifiers disagree;
+the results are saved to `data/AI_judgments_aligned.csv`.
+Then run `data/summarize_results.R` to compute the summary statistics (results listed below).
 
 ## Results
 
-- Wikipedia pages processed: 95
-- Available 10th previous revision: 94; 100th previous revision: 81
-- Revisions classified as noteworthy with heuristic prompt: 29%; few-shot prompt: 35%
-- Disagreements between heuristic and few-shot prompts: 17
-  - Classified as noteworthy with heuristic prompt: 3; few-shot prompt: 14
-  - Classified as noteworthy by human aligner: 11
-  - Classified as noteworthy by **unaligned** AI judge: 17 (65% accurate)
-  - Classified as noteworthy by **aligned** AI judge: 12 (94% accurate)
+- Wikipedia pages processed: 163/91 (train/test)
+- Available 10th previous revision: 162/88; 100th previous revision: 141/79
+- Revisions classified as noteworthy with heuristic prompt: 30%/32%; few-shot prompt: 36%/37%
+
+- Train set
+- Disagreements between heuristic and few-shot prompts: 26
+  - Classified as noteworthy with heuristic prompt: 3; few-shot prompt: 23
+  - Classified as noteworthy by human aligner: 16
+  - Classified as noteworthy by **unaligned** AI judge: 25 (58% accurate)
+  - Classified as noteworthy by **aligned** AI judge: 18 (92% accurate)
+
+- Test set
+- Disagreements between heuristic and few-shot prompts: 19
+  - Classified as noteworthy with heuristic prompt: 5; few-shot prompt: 14
+  - Classified as noteworthy by human aligner: 8
+  - Classified as noteworthy by **unaligned** AI judge: 18 (37% accurate)
+  - Classified as noteworthy by **aligned** AI judge: 16 (47% accurate)
 

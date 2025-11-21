@@ -1,4 +1,6 @@
-# This script was run at 2025-11-15 12:00 UTC to create wikipedia_titles.txt
+# This script was run on 2025-11-15 and 2025-11-18 to create train/wikipedia_titles.txt
+# This script was run on 2025-11-21 to create test/wikipedia_titles.txt
+
 url <- "https://en.wikipedia.org/wiki/Main_Page"
 lines <- readLines(url)
 
