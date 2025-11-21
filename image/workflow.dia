@@ -1403,7 +1403,7 @@ Page title#</dia:string>
         <dia:point val="46.5,21"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="46.45,20.9388;50.1525,22.8833"/>
+        <dia:rectangle val="46.45,20.9377;50.1525,23.05"/>
       </dia:attribute>
       <dia:attribute name="meta">
         <dia:composite type="dict"/>
@@ -1415,7 +1415,7 @@ Page title#</dia:string>
         <dia:real val="3.6024999999999991"/>
       </dia:attribute>
       <dia:attribute name="elem_height">
-        <dia:real val="1.833333335816866"/>
+        <dia:real val="2"/>
       </dia:attribute>
       <dia:attribute name="line_width">
         <dia:real val="0.10000000149011612"/>
@@ -1448,7 +1448,7 @@ Page title#</dia:string>
             <dia:real val="0.80000000000000004"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="48.3012,22.4627"/>
+            <dia:point val="48.3012,22.5794"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#000000"/>
@@ -1667,14 +1667,14 @@ Page title#</dia:string>
     </dia:object>
     <dia:object type="Standard - Line" version="0" id="O37">
       <dia:attribute name="obj_pos">
-        <dia:point val="50.1518,21.9247"/>
+        <dia:point val="50.1518,21.988"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="50.1016,21.6057;53.5794,22.2675"/>
+        <dia:rectangle val="50.1014,21.6392;53.5794,22.301"/>
       </dia:attribute>
       <dia:attribute name="conn_endpoints">
-        <dia:point val="50.1518,21.9247"/>
-        <dia:point val="53.4676,21.939"/>
+        <dia:point val="50.1518,21.988"/>
+        <dia:point val="53.4676,21.9665"/>
       </dia:attribute>
       <dia:attribute name="numcp">
         <dia:int val="1"/>
@@ -2411,7 +2411,7 @@ Confidence#</dia:string>
         <dia:point val="69.2324,8.82162"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="61.8474,8.22437;76.6353,10.593"/>
+        <dia:rectangle val="61.8474,8.24224;76.6174,10.5572"/>
       </dia:attribute>
       <dia:attribute name="text">
         <dia:composite type="text">
@@ -3896,7 +3896,7 @@ prompt#</dia:string>
             <dia:real val="0.80000000000000004"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="33,0.915676"/>
+            <dia:point val="33,0.915677"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#e6e6fa"/>
@@ -4224,7 +4224,7 @@ prompt#</dia:string>
         <dia:point val="67.5266,8.49428"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="67.5266,7.91491;67.5266,8.6299"/>
+        <dia:rectangle val="67.5266,7.91491;67.5266,8.62991"/>
       </dia:attribute>
       <dia:attribute name="text">
         <dia:composite type="text">
@@ -4254,10 +4254,10 @@ prompt#</dia:string>
     </dia:object>
     <dia:object type="Standard - Text" version="1" id="O104">
       <dia:attribute name="obj_pos">
-        <dia:point val="48.3012,21.9167"/>
+        <dia:point val="48.3012,22"/>
       </dia:attribute>
       <dia:attribute name="obj_bb">
-        <dia:rectangle val="48.3012,21.3373;48.3012,22.0523"/>
+        <dia:rectangle val="48.3012,21.4206;48.3012,22.1356"/>
       </dia:attribute>
       <dia:attribute name="text">
         <dia:composite type="text">
@@ -4271,7 +4271,7 @@ prompt#</dia:string>
             <dia:real val="0.80000000000000004"/>
           </dia:attribute>
           <dia:attribute name="pos">
-            <dia:point val="48.3012,21.9167"/>
+            <dia:point val="48.3012,22"/>
           </dia:attribute>
           <dia:attribute name="color">
             <dia:color val="#000000"/>
@@ -4287,6 +4287,84 @@ prompt#</dia:string>
       <dia:connections>
         <dia:connection handle="0" to="O31" connection="16"/>
       </dia:connections>
+    </dia:object>
+    <dia:object type="Standard - Image" version="0" id="O105">
+      <dia:attribute name="obj_pos">
+        <dia:point val="43.7,8.3"/>
+      </dia:attribute>
+      <dia:attribute name="obj_bb">
+        <dia:rectangle val="43.65,8.25;44.46,9.06001"/>
+      </dia:attribute>
+      <dia:attribute name="elem_corner">
+        <dia:point val="43.7,8.3"/>
+      </dia:attribute>
+      <dia:attribute name="elem_width">
+        <dia:real val="0.71001023054122925"/>
+      </dia:attribute>
+      <dia:attribute name="elem_height">
+        <dia:real val="0.7100103497505188"/>
+      </dia:attribute>
+      <dia:attribute name="draw_border">
+        <dia:boolean val="false"/>
+      </dia:attribute>
+      <dia:attribute name="keep_aspect">
+        <dia:boolean val="true"/>
+      </dia:attribute>
+      <dia:attribute name="file">
+        <dia:string>#/home/jedick/github/noteworthy-differences/work/bust_in_silhouette_small.png#</dia:string>
+      </dia:attribute>
+    </dia:object>
+    <dia:object type="Standard - Image" version="0" id="O106">
+      <dia:attribute name="obj_pos">
+        <dia:point val="36.4,11.5"/>
+      </dia:attribute>
+      <dia:attribute name="obj_bb">
+        <dia:rectangle val="36.35,11.45;37.16,12.26"/>
+      </dia:attribute>
+      <dia:attribute name="elem_corner">
+        <dia:point val="36.4,11.5"/>
+      </dia:attribute>
+      <dia:attribute name="elem_width">
+        <dia:real val="0.71001023054122925"/>
+      </dia:attribute>
+      <dia:attribute name="elem_height">
+        <dia:real val="0.7100103497505188"/>
+      </dia:attribute>
+      <dia:attribute name="draw_border">
+        <dia:boolean val="false"/>
+      </dia:attribute>
+      <dia:attribute name="keep_aspect">
+        <dia:boolean val="true"/>
+      </dia:attribute>
+      <dia:attribute name="file">
+        <dia:string>#/home/jedick/github/noteworthy-differences/work/bust_in_silhouette_small.png#</dia:string>
+      </dia:attribute>
+    </dia:object>
+    <dia:object type="Standard - Image" version="0" id="O107">
+      <dia:attribute name="obj_pos">
+        <dia:point val="49.2,21.3"/>
+      </dia:attribute>
+      <dia:attribute name="obj_bb">
+        <dia:rectangle val="49.15,21.25;49.96,22.06"/>
+      </dia:attribute>
+      <dia:attribute name="elem_corner">
+        <dia:point val="49.2,21.3"/>
+      </dia:attribute>
+      <dia:attribute name="elem_width">
+        <dia:real val="0.71001023054122925"/>
+      </dia:attribute>
+      <dia:attribute name="elem_height">
+        <dia:real val="0.7100103497505188"/>
+      </dia:attribute>
+      <dia:attribute name="draw_border">
+        <dia:boolean val="false"/>
+      </dia:attribute>
+      <dia:attribute name="keep_aspect">
+        <dia:boolean val="true"/>
+      </dia:attribute>
+      <dia:attribute name="file">
+        <dia:string>#/home/jedick/github/noteworthy-differences/work/bust_in_silhouette_small.png#</dia:string>
+      </dia:attribute>
     </dia:object>
   </dia:layer>
 </dia:diagram>
