@@ -5,6 +5,7 @@ from wiki_data_fetcher import (
     get_wikipedia_introduction,
     extract_revision_info,
 )
+from models import classify, judge
 
 
 def fetch_current_revision(title: str):
@@ -20,7 +21,7 @@ def fetch_current_revision(title: str):
     if not title or not title.strip():
         error_msg = "Please enter a Wikipedia page title."
         raise gr.Error(error_msg, print_exception=False)
-        return "", ""
+        return None, None
 
     try:
         # Get current revision (revision 0)
@@ -30,7 +31,7 @@ def fetch_current_revision(title: str):
         if not revision_info.get("revid"):
             error_msg = f"Error: Could not find Wikipedia page '{title}'. Please check the title."
             raise gr.Error(error_msg, print_exception=False)
-            return "", ""
+            return None, None
 
         revid = revision_info["revid"]
         timestamp = revision_info["timestamp"]
@@ -50,16 +51,16 @@ def fetch_current_revision(title: str):
     except Exception as e:
         error_msg = f"Error occurred: {str(e)}"
         raise gr.Error(error_msg, print_exception=False)
-        return "", ""
+        return None, None
 
 
-def fetch_previous_revision(title: str, mode: str, number: int, new_revision: str):
+def fetch_previous_revision(title: str, unit: str, number: int, new_revision: str):
     """
     Fetch previous revision of a Wikipedia article and return its introduction.
 
     Args:
         title: Wikipedia article title
-        mode: "days" or "revisions"
+        unit: "days" or "revisions"
         number: Number of days or revisions to go back
 
     Returns:
@@ -69,20 +70,20 @@ def fetch_previous_revision(title: str, mode: str, number: int, new_revision: st
     # If we get here with an empty new revision, then an error should have been raised
     # in fetch_current_revision, so just return empty values without raising another error
     if not new_revision:
-        return "", ""
+        return None, None
 
     try:
-        # Get previous revision based on mode
-        if mode == "revisions":
+        # Get previous revision based on unit
+        if unit == "revisions":
             json_data = get_previous_revisions(title, revisions=number)
             revision_info = extract_revision_info(json_data, revision=number)
-        else:  # mode == "days"
+        else:  # unit == "days"
             revision_info = get_revision_from_age(title, age_days=number)
 
         if not revision_info.get("revid"):
-            error_msg = f"Error: Could not find revision {number} {'revisions' if mode == 'revisions' else 'days'} back for '{title}'."
+            error_msg = f"Error: Could not find revision {number} {'revisions' if unit == 'revisions' else 'days'} back for '{title}'."
             raise gr.Error(error_msg, print_exception=False)
-            return "", ""
+            return None, None
 
         revid = revision_info["revid"]
         timestamp = revision_info["timestamp"]
@@ -102,60 +103,317 @@ def fetch_previous_revision(title: str, mode: str, number: int, new_revision: st
     except Exception as e:
         error_msg = f"Error occurred: {str(e)}"
         raise gr.Error(error_msg, print_exception=False)
-        return "", ""
+        return None, None
 
+
+def run_classifier(old_revision: str, new_revision: str, prompt_style: str):
+    """
+    Run a classification model on the revisions.
+
+    Args:
+        old_revision: Old revision text
+        new_revision: New revision text
+        prompt_style: heuristic or few-shot
+
+    Returns:
+        Tuple of (noteworthy, rationale) (bool, str)
+    """
+
+    # Values to return if there is an error
+    noteworthy, rationale = None, None
+    if not old_revision or not new_revision:
+        return noteworthy, rationale
+
+    try:
+        # Run classifier model
+        classify_result = classify(
+            old_revision, new_revision, prompt_style=prompt_style
+        )
+        if classify_result:
+            noteworthy = classify_result.get("noteworthy", None)
+            rationale = classify_result.get("rationale", "")
+        else:
+            error_msg = f"Error: Could not get {prompt_style} model result"
+            raise gr.Error(error_msg, print_exception=False)
+
+    except Exception as e:
+        error_msg = f"Error running model: {str(e)}"
+        raise gr.Error(error_msg, print_exception=False)
+
+    return noteworthy, rationale
+
+
+def run_heuristic_classifier(old_revision: str, new_revision: str):
+    return run_classifier(old_revision, new_revision, prompt_style="heuristic")
+
+
+def run_fewshot_classifier(old_revision: str, new_revision: str):
+    return run_classifier(old_revision, new_revision, prompt_style="few-shot")
+
+
+def run_judge(
+    old_revision: str,
+    new_revision: str,
+    heuristic_rationale,
+    fewshot_rationale,
+    judge_mode: str,
+):
+    """
+    Run classification models and judge on the revisions.
+
+    Args:
+        old_revision: Old revision text
+        new_revision: New revision text
+        heuristic_rationale: Heuristic model's rationale
+        fewshot_rationale: Few-shot model's rationale
+        judge_mode: Mode for judge function ("unaligned", "aligned", "aligned-heuristic")
+
+    Returns:
+        Tuple of (noteworthy, reasoning) (bool, str)
+    """
+
+    # Values to return if there is an error
+    noteworthy, reasoning = None, None
+    if (
+        not old_revision
+        or not new_revision
+        or not heuristic_rationale
+        or not fewshot_rationale
+    ):
+        return noteworthy, reasoning
+
+    try:
+        # Run judge
+        judge_result = judge(
+            old_revision,
+            new_revision,
+            heuristic_rationale,
+            fewshot_rationale,
+            mode=judge_mode,
+        )
+        if judge_result:
+            noteworthy = judge_result.get("noteworthy", "")
+            reasoning = judge_result.get("reasoning", "")
+        else:
+            error_msg = f"Error: Could not get judge's result"
+            raise gr.Error(error_msg, print_exception=False)
+
+    except Exception as e:
+        error_msg = f"Error running judge: {str(e)}"
+        raise gr.Error(error_msg, print_exception=False)
+
+    return noteworthy, reasoning
+
+
+def format_noteworthy(noteworthy, reasoning):
+    """
+    Format judge's noteworthy label as text.
+    """
+    if not reasoning:
+        # If the reasoning is empty, return nothing
+        return None
+    else:
+        # Format noteworthy boolean as text
+        return str(noteworthy)
+
+
+def compute_confidence(
+    heuristic_noteworthy,
+    fewshot_noteworthy,
+    judge_noteworthy,
+    heuristic_rationale,
+    fewshot_rationale,
+    judge_reasoning,
+):
+    """
+    Compute a confidence label using the noteworthy booleans.
+    """
+    # Return None if any of the rationales or reasoning is missing.
+    if not heuristic_rationale or not fewshot_rationale or not judge_reasoning:
+        return None
+    if heuristic_noteworthy == fewshot_noteworthy == judge_noteworthy:
+        # Classifiers and judge all agree
+        return "High"
+    elif heuristic_noteworthy != fewshot_noteworthy:
+        # Classifiers disagree, judge decides
+        return "Moderate"
+    else:
+        # Classifiers agree, judge vetoes
+        return "Questionable"
+
+
+# Setup theme without background image
+theme = gr.Theme.from_hub("NoCrypt/miku")
+theme.set(body_background_fill="#FFFFFF", body_background_fill_dark="#000000")
 
 # Create Gradio interface
-with gr.Blocks(title="Noteworthy Differences") as demo:
-    gr.Markdown("# Noteworthy Differences")
+with gr.Blocks(theme=theme, title="Noteworthy Differences") as demo:
+    gr.Markdown(
+        """
+    # Noteworthy Differences
+    Compare the current revision of a Wikipedia article (introduction only) with a revision in the past (number of days or revisions back).<br>
+    Two classifier models, with relatively short heuristic and few-shot prompts, and a judge predict the noteworthiness of the differences.<br>
+    The judge has a longer prompt for AI alignment, also in heuristic or few-shot styles, produced as described in the
+    [GitHub repository](https://github.com/jedick/noteworthy-differences).
+    """
+    )
 
     with gr.Row():
         title_input = gr.Textbox(
             label="Wikipedia Page Title", placeholder="e.g., David_Szalay", value=""
         )
-        mode_dropdown = gr.Dropdown(
-            choices=["days", "revisions"], value="days", label="Mode"
-        )
         number_input = gr.Number(label="Number", value=100, minimum=0, precision=0)
-        submit_btn = gr.Button("Fetch Revisions", variant="primary")
+        unit_dropdown = gr.Dropdown(
+            choices=["days", "revisions"], value="days", label="Unit"
+        )
+        judge_mode_dropdown = gr.Dropdown(
+            choices=["unaligned", "aligned", "aligned-heuristic"],
+            value="aligned-heuristic",
+            label="Judge Mode",
+        )
+        with gr.Column():
+            submit_btn = gr.Button("Fetch Revisions", variant="primary")
+            rerun_btn = gr.Button("Rerun Model", variant="primary")
 
     with gr.Row():
         with gr.Column():
             gr.Markdown("### Old Revision")
             old_timestamp = gr.Markdown("")
-            old_revision = gr.Textbox(
-                label="", lines=20, max_lines=30, interactive=False
-            )
+            old_revision = gr.Textbox(label="", lines=15, max_lines=30, container=False)
+            gr.Markdown(
+                """#### Confidence Key
+                - **High:** heuristic = few-shot = judge
+                - **Moderate:** heuristic ≠ few-shot, judge decides
+                - **Questionable:** heuristic = few-shot, judge vetoes
+                """
+            ),
 
         with gr.Column():
-            gr.Markdown("### New Revision")
+            gr.Markdown("### Current Revision")
             new_timestamp = gr.Markdown("")
-            new_revision = gr.Textbox(
-                label="", lines=20, max_lines=30, interactive=False
-            )
+            new_revision = gr.Textbox(label="", lines=15, max_lines=30, container=False)
 
         with gr.Column():
             gr.Markdown("### Model Output")
-            model_output = gr.Textbox(
-                label="",
-                lines=20,
-                max_lines=30,
-                interactive=False,
-                placeholder="Model output will appear here...",
+            heuristic_rationale = gr.Textbox(
+                label="Heuristic Model's Rationale",
+                lines=3,
+                max_lines=5,
             )
+            fewshot_rationale = gr.Textbox(
+                label="Few-shot Model's Rationale",
+                lines=3,
+                max_lines=5,
+            )
+            judge_reasoning = gr.Textbox(
+                label="Judge's Reasoning",
+                lines=3,
+                max_lines=7,
+            )
+            with gr.Row(variant="default"):
+                noteworthy_text = gr.Textbox(
+                    label="Noteworthy Differences",
+                    lines=1,
+                    interactive=False,
+                )
+                confidence = gr.Textbox(
+                    label="Confidence",
+                    lines=1,
+                    interactive=False,
+                )
 
-    # Press Enter in textbox or use button to submit
+    # Hidden checkboxes to store boolean values
+    heuristic_noteworthy = gr.Checkbox(visible=False)
+    fewshot_noteworthy = gr.Checkbox(visible=False)
+    judge_noteworthy = gr.Checkbox(visible=False)
+
     gr.on(
+        # Press Enter in textbox or use button to submit
         triggers=[title_input.submit, submit_btn.click],
+        # Clear the new_revision and new_timestamp values before proceeding.
+        # The empty values will propagate to the other components (through function return values) if there is an error.
+        fn=lambda: (gr.update(value=""), gr.update(value="")),
+        inputs=None,
+        outputs=[new_revision, new_timestamp],
+    ).then(
         fn=fetch_current_revision,
         inputs=[title_input],
         outputs=[new_revision, new_timestamp],
     ).then(
         fn=fetch_previous_revision,
-        inputs=[title_input, mode_dropdown, number_input, new_revision],
+        inputs=[title_input, unit_dropdown, number_input, new_revision],
         outputs=[old_revision, old_timestamp],
+    ).then(
+        fn=run_heuristic_classifier,
+        inputs=[old_revision, new_revision],
+        outputs=[heuristic_noteworthy, heuristic_rationale],
+    ).then(
+        fn=run_fewshot_classifier,
+        inputs=[old_revision, new_revision],
+        outputs=[fewshot_noteworthy, fewshot_rationale],
+    ).then(
+        fn=run_judge,
+        inputs=[
+            old_revision,
+            new_revision,
+            heuristic_rationale,
+            fewshot_rationale,
+            judge_mode_dropdown,
+        ],
+        outputs=[judge_noteworthy, judge_reasoning],
+    ).then(
+        fn=format_noteworthy,
+        inputs=[judge_noteworthy, judge_reasoning],
+        outputs=[noteworthy_text],
+    ).then(
+        fn=compute_confidence,
+        inputs=[
+            heuristic_noteworthy,
+            fewshot_noteworthy,
+            judge_noteworthy,
+            heuristic_rationale,
+            fewshot_rationale,
+            judge_reasoning,
+        ],
+        outputs=[confidence],
     )
 
+    # Rerun model when rerun button is clicked
+    gr.on(
+        triggers=[rerun_btn.click],
+        fn=run_heuristic_classifier,
+        inputs=[old_revision, new_revision],
+        outputs=[heuristic_noteworthy, heuristic_rationale],
+    ).then(
+        fn=run_fewshot_classifier,
+        inputs=[old_revision, new_revision],
+        outputs=[fewshot_noteworthy, fewshot_rationale],
+    ).then(
+        fn=run_judge,
+        inputs=[
+            old_revision,
+            new_revision,
+            heuristic_rationale,
+            fewshot_rationale,
+            judge_mode_dropdown,
+        ],
+        outputs=[judge_noteworthy, judge_reasoning],
+    ).then(
+        fn=format_noteworthy,
+        inputs=[judge_noteworthy, judge_reasoning],
+        outputs=[noteworthy_text],
+    ).then(
+        fn=compute_confidence,
+        inputs=[
+            heuristic_noteworthy,
+            fewshot_noteworthy,
+            judge_noteworthy,
+            heuristic_rationale,
+            fewshot_rationale,
+            judge_reasoning,
+        ],
+        outputs=[confidence],
+    )
 
 if __name__ == "__main__":
     demo.launch()

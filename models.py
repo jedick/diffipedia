@@ -73,6 +73,7 @@ def judge(old_revision, new_revision, rationale_1, rationale_2, mode="unaligned"
         new_revision: New revision of article
         rationale_1: Rationale provided by model 1 (i.e., heuristic prompt)
         rationale_2: Rationale provided by model 2 (i.e., few-shot prompt)
+        mode: Prompt mode: unaligned, aligned, or aligned-heuristic
 
     Returns:
         noteworthy: True if the differences are noteworthy; False if not
