@@ -4,6 +4,7 @@ from wiki_data_fetcher import (
     get_revision_from_age,
     get_wikipedia_introduction,
     extract_revision_info,
+    get_revisions_behind,
     get_random_wikipedia_title,
 )
 from models import classifier, judge
@@ -38,7 +39,7 @@ def fetch_current_revision(title: str):
         timestamp = revision_info["timestamp"]
 
         # Get introduction
-        introduction = get_wikipedia_introduction(title, revid)
+        introduction = get_wikipedia_introduction(revid)
 
         if introduction is None:
             introduction = f"Error: Could not retrieve introduction for current revision (revid: {revid})"
@@ -62,10 +63,10 @@ def fetch_previous_revision(title: str, unit: str, number: int, new_revision: st
     Args:
         title: Wikipedia article title
         unit: "days" or "revisions"
-        number: Number of days or revisions to go back
+        number: Number of days or revisions behind
 
     Returns:
-        Tuple of (introudction, timestamp)
+        Tuple of (introduction, timestamp)
     """
 
     # If we get here with an empty new revision, then an error should have been raised
@@ -82,21 +83,35 @@ def fetch_previous_revision(title: str, unit: str, number: int, new_revision: st
             revision_info = get_revision_from_age(title, age_days=number)
 
         if not revision_info.get("revid"):
-            error_msg = f"Error: Could not find revision {number} {'revisions' if unit == 'revisions' else 'days'} back for '{title}'."
+            error_msg = f"Error: Could not find revision {number} {'revisions' if unit == 'revisions' else 'days'} behind for '{title}'."
             raise gr.Error(error_msg, print_exception=False)
             return None, None
 
         revid = revision_info["revid"]
         timestamp = revision_info["timestamp"]
+        print(f"revid for old revision: {revid}")
 
         # Get introduction
-        introduction = get_wikipedia_introduction(title, revid)
+        introduction = get_wikipedia_introduction(revid)
 
         if introduction is None:
             introduction = f"Error: Could not retrieve introduction for previous revision (revid: {revid})"
 
+        # Get revisions_behind
+        if unit == "revisions":
+            revisions_behind = number
+        else:
+            revisions_behind = get_revisions_behind(title, revid)
+            # For a negative number, replace the negative sign with ">"
+            if revisions_behind < 0:
+                revisions_behind = str(revisions_behind).replace("-", ">")
+
         # Format timestamp for display
-        timestamp = f"**Timestamp:** {timestamp}" if timestamp else ""
+        timestamp = (
+            f"**Timestamp:** {timestamp}, {revisions_behind} revisions behind"
+            if timestamp
+            else ""
+        )
 
         # Return introduction text and timestamp
         return introduction, timestamp
@@ -252,7 +267,7 @@ with gr.Blocks(theme=theme, title="Noteworthy Differences") as demo:
             gr.Markdown(
                 """
             # Noteworthy Differences
-            Compare the current revision of a Wikipedia article (introduction only) with a revision in the past (number of days or revisions back).<br>
+            Compare the current revision of a Wikipedia article (introduction only) with an old revision (number of days or revisions behind).<br>
             Two classifier models, with relatively short heuristic and few-shot prompts, and a judge predict the noteworthiness of the differences.<br>
             The judge has a longer prompt for AI alignment, also in heuristic or few-shot styles, produced as described in the
             [GitHub repository](https://github.com/jedick/noteworthy-differences).
@@ -289,6 +304,12 @@ with gr.Blocks(theme=theme, title="Noteworthy Differences") as demo:
             gr.Markdown("### Old Revision")
             old_timestamp = gr.Markdown("")
             old_revision = gr.Textbox(label="", lines=15, max_lines=30, container=False)
+            gr.Markdown(
+                """
+            - Page title is case-sensitive; use underscores or spaces.
+            - Specify any number of days or up to 499 revisions behind.
+            """
+            )
 
         with gr.Column():
             gr.Markdown("### Current Revision")

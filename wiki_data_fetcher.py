@@ -140,12 +140,11 @@ def get_previous_revisions(title: str, revisions: int = 0) -> Dict[str, str]:
     return json_data
 
 
-def get_wikipedia_introduction(title: str, revid: int) -> Dict[str, str]:
+def get_wikipedia_introduction(revid: int) -> Dict[str, str]:
     """
     Retrieve the introduction of a Wikipedia article.
 
     Args:
-        title: Wikipedia article title (e.g., 'David_Szalay')
         revid: Revision id of the article
 
     Returns:
@@ -153,8 +152,8 @@ def get_wikipedia_introduction(title: str, revid: int) -> Dict[str, str]:
 
     Example:
         # Get intro from current article revision
-        revision_info = get_revid_from_age("David_Szalay")
-        get_wikipedia_introduction("David_Szalay", revision_info["revid"])
+        revision_info = get_revision_from_age("David_Szalay")
+        get_wikipedia_introduction(revision_info["revid"])
     """
 
     # Return None for missing revid
@@ -167,7 +166,7 @@ def get_wikipedia_introduction(title: str, revid: int) -> Dict[str, str]:
     json_data = run_get_request(params)
 
     # Sometimes a revision is deleted and can't be viewed
-    # E.g. title = 'Turin', revid = '1276494621'
+    # E.g. revid = '1276494621' for Turin
     try:
         html_content = json_data["parse"]["text"]["*"]
     except:
@@ -233,6 +232,89 @@ def get_wikipedia_introduction(title: str, revid: int) -> Dict[str, str]:
     introduction = "\n\n".join(paragraphs)
 
     return introduction
+
+
+def get_revisions_behind(title: str, revid: int) -> int:
+    """
+    Get the number of revisions a given revid is behind the current revision of the page.
+
+    Args:
+        revid: Revision ID of the page
+
+    Returns:
+        Integer representing the number of revisions back (0 if it's the current revision)
+
+    Example:
+        # Get how many revisions behind a specific revid is
+        revisions_behind = get_revisions_behind(123456789)
+    """
+
+    ## First, get the page title from the revid
+    # params = {"action": "parse", "oldid": revid, "prop": "title", "format": "json"}
+    # try:
+    #    json_data = run_get_request(params)
+    #    title = json_data["parse"]["title"]
+    # except Exception:
+    #    # If we can't get the title, the revid might be invalid
+    #    raise ValueError(f"Could not retrieve page title for revid {revid}. The revid may be invalid or deleted.")
+
+    # Search through revisions going back from current
+    # We'll paginate through results if needed
+    revision_count = 0
+    continue_token = None
+
+    # Run the loop twice to get up to 1000 revisions behind
+    for i in range(2):
+        params = {
+            "action": "query",
+            "titles": title,
+            "prop": "revisions",
+            "rvlimit": 500,  # API limit per request
+            "rvdir": "older",
+            "rvprop": "ids",
+            "format": "json",
+        }
+
+        if continue_token:
+            params["rvcontinue"] = continue_token
+
+        try:
+            json_data = run_get_request(params)
+            pages = json_data["query"]["pages"]
+            page_id = list(pages.keys())[0]
+
+            if page_id == "-1":
+                raise ValueError(f"Page not found for revid {revid}")
+
+            revisions = pages[page_id]["revisions"]
+
+            # Find the index of the given revid in the current batch of revisions
+            for i, revision in enumerate(revisions):
+                if revision["revid"] == revid:
+                    return revision_count + i
+
+            # Update the count of revisions we've checked
+            revision_count += len(revisions)
+
+            # Check if there are more revisions to search
+            continue_token = json_data.get("continue", {}).get("rvcontinue")
+
+            if not continue_token:
+                # Reached the end of revisions but didn't find the revid
+                raise ValueError(
+                    f"Revid {revid} not found in the revision history of the page. "
+                    f"It may be from a different page or may have been deleted."
+                )
+
+        except ValueError:
+            # Re-raise ValueError exceptions
+            raise
+        except Exception as e:
+            raise ValueError(f"Error searching for revid {revid}: {e}")
+
+    # If we looped without returning the revision count, return it as a negative number
+    negative_revision_count = -revision_count
+    return negative_revision_count
 
 
 def get_random_wikipedia_title():
